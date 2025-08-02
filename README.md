@@ -1,61 +1,154 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Laravel Futures Matching Engine
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A high-performance **Laravel-based futures trading engine** leveraging **Redis** for a ZSET-based orderbook and scalable order processing with queues and workers.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 🚀 Setup Instructions
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+1. **Clone the Repository**
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+   ```bash
+   git clone https://github.com/amidesfahani/lightmatch-laravel.git
+   cd lightmatch-laravel
+   composer install
+   cp .env.example .env
+   php artisan key:generate
+   ```
 
-## Learning Laravel
+2. **Configure Environment**
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+   Update `.env` with your **database** and **Redis** credentials.
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+3. **Run Migrations**
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+   ```bash
+   php artisan migrate
+   ```
 
-## Laravel Sponsors
+---
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## 🔢 Database Seeding
 
-### Premium Partners
+Seed large datasets for testing users, wallets, and orders.
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+**Command Format**:
 
-## Contributing
+```bash
+php artisan db:seed-records {count} --only={target}
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+**Available `{count}` Options**:
+- `small` → 1,000 orders
+- `10k` → 10,000 orders
+- `100k` → 100,000 orders
+- `1m` → 1,000,000 orders
+- `10m` → 10,000,000 orders
 
-## Code of Conduct
+**Available `--only` Options**:
+- `users` → Seed only users
+- `wallets` → Seed only wallets
+- `orders` → Seed only orders
+- `all` → Seed users, wallets, and orders
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+**Examples**:
+```bash
+php artisan db:seed-records small --only=all
+php artisan db:seed-records 10k --only=orders
+php artisan db:seed-records 1m --only=orders
+```
 
-## Security Vulnerabilities
+---
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## ⚙️ Run Matching Queue Workers
 
-## License
+Start the queue workers to process matching and default jobs:
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```bash
+php artisan queue:work --queue=default,matching
+```
+
+---
+
+## 💻 Development
+
+**Compile Assets**:
+```bash
+composer run dev
+```
+
+**Enable Hot Reloading** (with Vite):
+```bash
+composer run hot
+```
+
+---
+
+## 📊 Load Testing with Locust
+
+1. **Install Locust**:
+   ```bash
+   pip install locust
+   ```
+
+2. **Run Locust Test**:
+   ```bash
+   locust -f locustfile.py --host=http://127.0.0.1:8000
+   ```
+
+3. Open `http://localhost:8089` in your browser to start load testing.
+
+---
+
+## 🧠 Key Features
+
+- **Redis-Powered Matching**: Utilizes Redis ZSET for a high-performance orderbook.
+- **Batch Processing**: Matching jobs dispatched in batches of 200 buy orders to prevent overload.
+- **Symbol-Specific Tables**: Orders stored in tables like `orders_btc_usd`.
+- **Wallet Management**: Supports `balance` and `frozen_balance` for margin trading.
+- **Dynamic PnL**: Profit and loss calculated and cached in Redis.
+
+---
+
+## 📂 Directory Structure
+
+```plaintext
+app/
+├── Actions/
+│   └── PlaceOrderAction.php
+├── Jobs/
+│   ├── MatchFuturesOrdersJob.php
+│   └── MatchOrdersBatchJob.php
+├── Services/
+│   └── FuturesMatchingService.php
+├── Models/
+│   ├── Order.php
+│   └── Wallet.php
+database/
+├── migrations/
+│   └── create_orders_{symbol}_table.php
+├── seeders/
+│   ├── UsersSeeder.php
+│   ├── WalletsSeeder.php
+│   └── OrdersSeeder.php
+```
+
+---
+
+## 🧪 Test Commands Summary
+
+```bash
+# Run queue workers for matching and default jobs
+php artisan queue:work --queue=default,matching
+
+# Seed database with test data
+php artisan db:seed-records small --only=all
+php artisan db:seed-records 10k --only=orders
+php artisan db:seed-records 1m --only=orders
+
+# Compile assets
+composer run dev
+
+# Run Locust for load testing
+locust -f locustfile.py --host=http://127.0.0.1:8000
+```
